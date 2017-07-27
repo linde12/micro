@@ -28,6 +28,12 @@ const (
 	autosaveTime         = 8   // Number of seconds to wait before autosaving
 )
 
+// Mode acts like a vim kind of mode, e.g. visual, insert, normal, etc.
+// A Mode has to have a OnKey method
+type Mode interface {
+	OnKey(ev *tcell.EventKey)
+}
+
 var (
 	// The main screen
 	screen tcell.Screen
@@ -38,6 +44,9 @@ var (
 	// The default highlighting style
 	// This simply defines the default foreground and background colors
 	defStyle tcell.Style
+
+	// The editing mode we're currently in
+	mode Mode
 
 	// Where the user's configuration is
 	// This should be $XDG_CONFIG_HOME/micro
@@ -294,6 +303,8 @@ func main() {
 
 	// Start the screen
 	InitScreen()
+
+	mode = &NormalMode{}
 
 	// This is just so if we have an error, we can exit cleanly and not completely
 	// mess up the terminal being worked in

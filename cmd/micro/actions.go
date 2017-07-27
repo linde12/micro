@@ -289,6 +289,20 @@ func (v *View) WordRight(usePlugin bool) bool {
 	return true
 }
 
+// VimWordRight moves the cursor one word to the right
+func (v *View) VimWordRight(usePlugin bool) bool {
+	if usePlugin && !PreActionCall("VimWordRight", v) {
+		return false
+	}
+
+	v.Cursor.VimWordRight()
+
+	if usePlugin {
+		return PostActionCall("VimWordRight", v)
+	}
+	return true
+}
+
 // WordLeft moves the cursor one word to the left
 func (v *View) WordLeft(usePlugin bool) bool {
 	if usePlugin && !PreActionCall("WordLeft", v) {
@@ -299,6 +313,20 @@ func (v *View) WordLeft(usePlugin bool) bool {
 
 	if usePlugin {
 		return PostActionCall("WordLeft", v)
+	}
+	return true
+}
+
+// VimWordLeft moves the cursor one word to the left
+func (v *View) VimWordLeft(usePlugin bool) bool {
+	if usePlugin && !PreActionCall("VimWordLeft", v) {
+		return false
+	}
+
+	v.Cursor.VimWordLeft()
+
+	if usePlugin {
+		return PostActionCall("VimWordLeft", v)
 	}
 	return true
 }

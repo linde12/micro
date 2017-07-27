@@ -495,53 +495,57 @@ func (v *View) HandleEvent(event tcell.Event) {
 	switch e := event.(type) {
 	case *tcell.EventKey:
 		// Check first if input is a key binding, if it is we 'eat' the input and don't insert a rune
-		isBinding := false
-		for key, actions := range bindings {
-			if e.Key() == key.keyCode {
-				if e.Key() == tcell.KeyRune {
-					if e.Rune() != key.r {
-						continue
-					}
-				}
-				if e.Modifiers() == key.modifiers {
-					for _, c := range v.Buf.cursors {
-						v.SetCursor(c)
-						relocate = false
-						isBinding = true
-						relocate = v.ExecuteActions(actions) || relocate
-					}
-					v.SetCursor(&v.Buf.Cursor)
-					v.Buf.MergeCursors()
-					break
-				}
-			}
-		}
-		if !isBinding && e.Key() == tcell.KeyRune {
-			// Check viewtype if readonly don't insert a rune (readonly help and log view etc.)
-			if v.Type.readonly == false {
-				for _, c := range v.Buf.cursors {
-					v.SetCursor(c)
-
-					// Insert a character
-					if v.Cursor.HasSelection() {
-						v.Cursor.DeleteSelection()
-						v.Cursor.ResetSelection()
-					}
-					v.Buf.Insert(v.Cursor.Loc, string(e.Rune()))
-
-					for pl := range loadedPlugins {
-						_, err := Call(pl+".onRune", string(e.Rune()), v)
-						if err != nil && !strings.HasPrefix(err.Error(), "function does not exist") {
-							TermMessage(err)
+		if !globalSettings["vimmode"].(bool) {
+			isBinding := false
+			for key, actions := range bindings {
+				if e.Key() == key.keyCode {
+					if e.Key() == tcell.KeyRune {
+						if e.Rune() != key.r {
+							continue
 						}
 					}
-
-					if recordingMacro {
-						curMacro = append(curMacro, e.Rune())
+					if e.Modifiers() == key.modifiers {
+						for _, c := range v.Buf.cursors {
+							v.SetCursor(c)
+							relocate = false
+							isBinding = true
+							relocate = v.ExecuteActions(actions) || relocate
+						}
+						v.SetCursor(&v.Buf.Cursor)
+						v.Buf.MergeCursors()
+						break
 					}
 				}
-				v.SetCursor(&v.Buf.Cursor)
 			}
+			if !isBinding && e.Key() == tcell.KeyRune {
+				// Check viewtype if readonly don't insert a rune (readonly help and log view etc.)
+				if v.Type.readonly == false {
+					for _, c := range v.Buf.cursors {
+						v.SetCursor(c)
+
+						// Insert a character
+						if v.Cursor.HasSelection() {
+							v.Cursor.DeleteSelection()
+							v.Cursor.ResetSelection()
+						}
+						v.Buf.Insert(v.Cursor.Loc, string(e.Rune()))
+
+						for pl := range loadedPlugins {
+							_, err := Call(pl+".onRune", string(e.Rune()), v)
+							if err != nil && !strings.HasPrefix(err.Error(), "function does not exist") {
+								TermMessage(err)
+							}
+						}
+
+						if recordingMacro {
+							curMacro = append(curMacro, e.Rune())
+						}
+					}
+					v.SetCursor(&v.Buf.Cursor)
+				}
+			}
+		} else {
+			mode.OnKey(e)
 		}
 	case *tcell.EventPaste:
 		// Check viewtype if readonly don't paste (readonly help and log view etc.)

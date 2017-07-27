@@ -205,6 +205,7 @@ func DefaultGlobalSettings() map[string]interface{} {
 		},
 		"pluginrepos": []string{},
 		"useprimary":  true,
+		"vimmode":     true,
 	}
 }
 

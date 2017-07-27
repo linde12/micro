@@ -231,6 +231,100 @@ func (c *Cursor) WordLeft() {
 	c.Right()
 }
 
+// VimWordLeft moves the cursor one word to the left
+func (c *Cursor) VimWordLeft() {
+	wasWordChar := false
+	//wasWhitespace := false
+	c.Left()
+	for IsWhitespace(c.RuneUnder(c.X)) {
+		//wasWhitespace = true
+		if c.X == 0 {
+			c.Up()
+			c.End()
+			return
+		}
+		c.Left()
+	}
+
+	for IsWordChar(string(c.RuneUnder(c.X))) {
+		wasWordChar = true
+		if c.X == 0 {
+			return
+		}
+		c.Left()
+	}
+	for !IsWordChar(string(c.RuneUnder(c.X))) {
+		if c.X == 0 {
+			return
+		}
+		c.Right()
+	}
+	if !wasWordChar {
+		// If the string is e.g. "..." we want to treat it as a word
+		if c.X > 0 {
+			r := c.RuneUnder(c.X - 1)
+			for c.RuneUnder(c.X-1) == r {
+				c.Left()
+			}
+			for IsWhitespace(c.RuneUnder(c.X)) {
+				//wasWhitespace = true
+				if c.X == 0 {
+					return
+				}
+				c.Left()
+			}
+		}
+	}
+}
+
+// VimWordRight moves the cursor one word to the right
+func (c *Cursor) VimWordRight() {
+	wasWordChar := false
+	wasWhitespace := false
+
+	for IsWhitespace(c.RuneUnder(c.X)) {
+		wasWhitespace = true
+		if c.X == Count(c.buf.Line(c.Y)) {
+			c.Right()
+			return
+		}
+		c.Right()
+	}
+	if wasWhitespace {
+		return
+	}
+
+	for IsWordChar(string(c.RuneUnder(c.X))) {
+		wasWordChar = true
+		if c.X == Count(c.buf.Line(c.Y)) {
+			return
+		}
+		c.Right()
+	}
+	for IsWhitespace(c.RuneUnder(c.X)) {
+		if c.X == Count(c.buf.Line(c.Y)) {
+			c.Right()
+			return
+		}
+		c.Right()
+	}
+
+	if !wasWordChar {
+		// If the string is e.g. "..." we want to treat it as a word
+		r := c.RuneUnder(c.X)
+		for c.RuneUnder(c.X) == r {
+			c.Right()
+		}
+		for IsWhitespace(c.RuneUnder(c.X)) {
+			if c.X == Count(c.buf.Line(c.Y)) {
+				c.Right()
+				return
+			}
+			c.Right()
+		}
+	}
+}
+
 // RuneUnder returns the rune under the given x position
 func (c *Cursor) RuneUnder(x int) rune {
 	line := []rune(c.buf.Line(c.Y))
